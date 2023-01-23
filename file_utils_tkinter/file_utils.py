@@ -9,13 +9,13 @@ root = tk.Tk()
 root.title("File Utils")
 
 directory = ""
-label_dir_text = tk.StringVar(value="Directory: None")
+label_dir_text = tk.StringVar(value="None")
 regex_text = tk.StringVar()
 replace_text = tk.StringVar()
 def change_dir():
     global directory, file_list
     directory = filedialog.askdirectory()
-    label_dir_text.set("Directory: {}".format(directory))
+    label_dir_text.set(directory)
     update_list()
 
 regex_timer_id = ''
@@ -33,33 +33,47 @@ def update_regex():
 def update_list():
     file_list.delete(*file_list.get_children())
     files = [f for f in listdir(directory) if isfile(join(directory, f))]
+    try:
+        regex = re.compile(regex_text.get())
+        valid = True
+    except:
+        valid = False
     for f in files:
-        newf = re.sub(regex_text.get(), replace_text.get(), f)
+        if valid:
+            newf = regex.sub(replace_text.get(), f)
+            if newf == f:
+                newf = '<NO CHANGE>'
+        else:
+            newf = '<INVALID_REGEX>'
         file_list.insert('', 'end', values=(f, newf))
+            
 
 
 frm = ttk.Frame(root, padding=10)
-frm.pack()
+frm.pack(fill='both', expand=1)
+frm.columnconfigure(1, weight=99)
 
-ttk.Button(frm, text="Change Directory", command=change_dir).pack()
+ttk.Button(frm, text="Directory", command=change_dir).grid(row=0, column=0, sticky='E')
 
-ttk.Label(frm, textvariable=label_dir_text).pack()
+ttk.Label(frm, textvariable=label_dir_text).grid(row=0, column=1, sticky='EW')
 
+ttk.Label(frm, text='Regex Capture').grid(row=1, column=0, sticky='E')
 entry_regex = ttk.Entry(frm, textvariable=regex_text)
 entry_regex.bind('<KeyRelease>', regex_text_update)
-entry_regex.pack()
+entry_regex.grid(row=1, column=1, sticky='EW')
 
+ttk.Label(frm, text='Regex Subsitution').grid(row=2, column=0, sticky='E')
 entry_replace = ttk.Entry(frm, textvariable=replace_text)
 entry_replace.bind('<KeyRelease>', regex_text_update)
-entry_replace.pack()
-
-ttk.Button(frm, text="Rename Files", command=update_regex).pack()
+entry_replace.grid(row=2, column=1, sticky='EW')
 
 file_list = ttk.Treeview(frm, columns=('before', 'after'), show='headings')
 file_list.heading("before", text="before")
 file_list.heading('after', text='after')
-file_list.pack()
-
+file_list.grid(row=3, column=0, columnspan=2, sticky='NSEW')
+frm.rowconfigure(3, weight=99)
 file_list.insert('', 'end', values=('one', 'two'))
+
+ttk.Button(frm, text="Rename Files", command=update_regex).grid(row=4, column=0, columnspan=2)
 
 root.mainloop()
