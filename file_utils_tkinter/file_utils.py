@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
-from os import listdir
+import os
 from os.path import isfile, join
 import re
 
@@ -24,6 +24,7 @@ def regex_text_update(x):
     if regex_timer_id != '':
         root.after_cancel(regex_timer_id)
     regex_timer_id = root.after(1000, update_list)
+    btn_rename['state'] = tk.DISABLED
 
 def update_regex():
     global regex_timer_id
@@ -32,7 +33,7 @@ def update_regex():
 
 def update_list():
     file_list.delete(*file_list.get_children())
-    files = [f for f in listdir(directory) if isfile(join(directory, f))]
+    files = [f for f in os.listdir(directory) if isfile(join(directory, f))]
     try:
         regex = re.compile(regex_text.get())
         valid = True
@@ -46,8 +47,15 @@ def update_list():
         else:
             newf = '<INVALID_REGEX>'
         file_list.insert('', 'end', values=(f, newf))
-            
+    btn_rename['state'] = tk.NORMAL
 
+def do_rename():
+    for child in file_list.get_children():
+        os.chdir(directory)
+        current, new = file_list.item(child)["values"]
+        if new != '<INVALID_REGEX>' and new != '<NO CHANGE>':
+            os.rename(current, new)
+    update_list()
 
 frm = ttk.Frame(root, padding=10)
 frm.pack(fill='both', expand=1)
@@ -74,6 +82,8 @@ file_list.grid(row=3, column=0, columnspan=2, sticky='NSEW')
 frm.rowconfigure(3, weight=99)
 file_list.insert('', 'end', values=('one', 'two'))
 
-ttk.Button(frm, text="Rename Files", command=update_regex).grid(row=4, column=0, columnspan=2)
+btn_rename = ttk.Button(frm, text="Rename Files", command=do_rename)
+btn_rename.grid(row=4, column=0, columnspan=2)
+btn_rename['state'] = tk.DISABLED
 
 root.mainloop()
