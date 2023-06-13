@@ -1,0 +1,67 @@
+// ==UserScript==
+// @name        Feyd WaniKani Review Enhancement
+// @namespace   Mempo
+// @description Add another shortcut to enter an answer, so your pinky doesn't get too tired!
+// @match     https://www.wanikani.com/subjects/review
+// @match     https://www.wanikani.com/subjects/extra_study*
+// @version     1
+// @grant       none
+// ==/UserScript==
+
+
+
+function isOpen(section) {
+    return !section.classList.contains("subject-section__toggle--collapsed");
+}
+
+function openInfo(which) {
+    const toClose = [];
+    let toOpen = null;
+
+    function sortSection(toSort) {
+        const sec = document.querySelector("#" + toSort).parentElement.querySelector("h2 > a");
+        if (toSort == which) {
+            toOpen = sec;
+        } else {
+            toClose.push(sec);
+        }
+    }
+
+    sortSection("meaning");
+    sortSection("reading");
+    sortSection("context");
+    sortSection("components");
+
+    for (const sec of toClose) {
+        if (isOpen(sec)) {
+            sec.click();
+        }
+    }
+
+    if (!isOpen(toOpen)) {
+        toOpen.click();
+    }
+}
+
+window.addEventListener ('keydown', function (event) {
+    const enabled = document.querySelector(".quiz-input__input").getAttribute("enabled");
+    if (enabled == "false") {
+        switch (event.key) {
+            case " ": // EDIT THIS CODE FOR CUSTOM SHORTCUT
+                document.querySelector(".quiz-input__submit-button").click();
+                break;
+            case "a":
+                openInfo("meaning");
+                break;
+            case "s":
+                openInfo("reading");
+                break;
+            case "d":
+                openInfo("context");
+                break;
+            case "g":
+                openInfo("components");
+                break;
+        }
+    }
+});
